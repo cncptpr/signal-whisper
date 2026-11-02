@@ -159,6 +159,8 @@ let
           let group = ($data.destination? | default ($data.groupInfo?.groupId? | default ""))
           print $"group ($group)"
           let bypass_limits = (matches-group $group $cfg.group_hex $cfg.group_b64)
+          let own_message = ($parsed.envelope?.syncMessage?.sentMessage? != null)
+          if $own_message and (not $bypass_limits) and (not $cfg.transcribe_own_messages) { return }
 
           let atts = ($data.attachments?
             | default []
@@ -263,6 +265,7 @@ let
             language: ($env.SIGNAL_WHISPER_LANGUAGE | default "auto")
             prefix: ($env.SIGNAL_WHISPER_PREFIX | default "")
             notify_self: (($env.SIGNAL_WHISPER_NOTIFY_SELF | default "1") == "1")
+            transcribe_own_messages: (($env.SIGNAL_WHISPER_TRANSCRIBE_OWN_MESSAGES | default "0") == "1")
             max_audio_seconds: (($env.SIGNAL_WHISPER_MAX_AUDIO_SECONDS | default "120") | into int)
             rate_file: ($env.HOME | path join ".signal-whisper-rate-limits.json")
           }
@@ -497,6 +500,12 @@ in
       '';
     };
 
+    transcribeOwnMessages = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Transcribe your own voice messages sent outside the selected group.";
+    };
+
     maxAudioLengthSeconds = lib.mkOption {
       type = lib.types.ints.positive;
       default = 120;
@@ -622,6 +631,7 @@ in
           "SIGNAL_WHISPER_LANGUAGE=${cfg.language}"
           "SIGNAL_WHISPER_PREFIX=${cfg.messagePrefix}"
           "SIGNAL_WHISPER_NOTIFY_SELF=${if cfg.notifySelf then "1" else "0"}"
+          "SIGNAL_WHISPER_TRANSCRIBE_OWN_MESSAGES=${if cfg.transcribeOwnMessages then "1" else "0"}"
           "SIGNAL_WHISPER_MAX_AUDIO_SECONDS=${toString cfg.maxAudioLengthSeconds}"
           "SIGNAL_WHISPER_ACCOUNT_DB_FILE=${cfg.secrets.accountDbFile}"
 

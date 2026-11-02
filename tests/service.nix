@@ -46,6 +46,7 @@ pkgs.testers.runNixOSTest {
 
     services.signal-whisper = {
       enable = true;
+      transcribeOwnMessages = true;
       modelName = "tiny_en";
       whisperPackage = stub "whisper-cli";
       signalCliPackage = stub "signal-cli";
@@ -83,6 +84,7 @@ pkgs.testers.runNixOSTest {
     machine.wait_for_unit("signal-whisper.service")
     machine.succeed("test -f '${modelPath}'")
     machine.succeed("grep -Fq 'SIGNAL_WHISPER_MODEL=${modelPath}' /etc/systemd/system/signal-whisper.service")
+    machine.succeed("grep -Fq 'SIGNAL_WHISPER_TRANSCRIBE_OWN_MESSAGES=1' /etc/systemd/system/signal-whisper.service")
 
     # preStart must have installed the secrets into the service data dir
     machine.wait_until_succeeds(
@@ -92,20 +94,20 @@ pkgs.testers.runNixOSTest {
       "test -f /var/lib/signal-whisper/.local/share/signal-cli/data/854007.d/account.db"
     )
 
-    # Any sender can trigger five transcriptions per hour outside the selected
-    # group; the next request is blocked. Group names and sender names are
-    # included in the reply header, and the selected group bypasses the limits.
+    # Own messages are included here because the option is enabled; outside
+    # the selected group they use the same limits as messages from others.
     machine.wait_until_succeeds("grep -q 'hallo welt' /tmp/send-log.txt")
     machine.succeed("grep -q -- '--notify-self' /tmp/send-log.txt")
     machine.succeed("grep -q -- '-g XS8KGw==' /tmp/send-log.txt")
     machine.wait_until_succeeds("grep -q 'From Alice:' /tmp/send-log.txt")
     machine.wait_until_succeeds("grep -q 'From Alice in Friends:' /tmp/send-log.txt")
     machine.wait_until_succeeds("grep -q 'From Alice in Home:' /tmp/send-log.txt")
-    machine.wait_until_succeeds("test $(grep -c 'hallo welt' /tmp/send-log.txt) -eq 7")
+    machine.wait_until_succeeds("test $(grep -c 'hallo welt' /tmp/send-log.txt) -eq 8")
+    machine.wait_until_succeeds("grep -q 'From Me:' /tmp/send-log.txt")
     machine.succeed("grep -q 'limit is 5 per hour' /tmp/send-log.txt")
     machine.succeed("test $(grep -c 'limit is 5 per hour' /tmp/send-log.txt) -eq 1")
     machine.succeed("grep -q 'no longer than 120 seconds' /tmp/send-log.txt")
-    machine.wait_until_succeeds("test $(grep -c '^CALL:' /tmp/send-log.txt) -eq 9", timeout=30)
+    machine.wait_until_succeeds("test $(grep -c '^CALL:' /tmp/send-log.txt) -eq 10", timeout=30)
 
     # Single-object and newline-delimited JSON receive output are accepted;
     # typing events are ignored rather than reported as parse failures.

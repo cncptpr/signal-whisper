@@ -91,6 +91,7 @@ Copy the exported secret files to the server (typically wired to
             # language = "auto";   # or e.g. "de"
             # messagePrefix = "Voice note — ";
             # notifySelf = true;
+            # transcribeOwnMessages = true;
             secrets = {
               accountsFile = "/run/secrets/accounts.json";
               # The db's user and group must match signal-whisper's.
@@ -124,6 +125,7 @@ Set exactly one of `modelName` (a model package name such as `tiny.en`) or
 | `language` | `auto` | Language passed to whisper (`auto` lets it guess). |
 | `messagePrefix` | `""` | Optional text prepended to the sender and group header. |
 | `notifySelf` | `true` | Send with `--notify-self` so replies also appear in the phone conversation. |
+| `transcribeOwnMessages` | `false` | Also transcribe your own voice notes sent outside the selected group. |
 | `maxAudioLengthSeconds` | `120` | Maximum voice-message duration outside the selected group. |
 | `secrets.accountsFile` | `null` | `accounts.json` from the linking tool. |
 | `secrets.accountFile` | `null` | `account` from the linking tool. |

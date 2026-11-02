@@ -21,6 +21,7 @@ case "$SUB" in
       mkdir -p "$HOME/.local/share/signal-cli/attachments"
       printf 'notreallyaudiodata' > "$HOME/.local/share/signal-cli/attachments/voice-a-id"
       printf 'notreallyaudiodata' > /tmp/voice-b.mp4
+      printf 'notreallyaudiodata' > /tmp/voice-own.mp4
       printf 'notreallyaudiodata' > /tmp/voice-long.mp4
       cat <<'JSON'
 [
@@ -32,6 +33,20 @@ case "$SUB" in
           "destination": "XS8KGw==",
           "attachments": [
             {"voiceNote": true, "contentType": "audio/mp4", "filename": "voice-note.mp4", "id": "voice-a-id"}
+          ]
+        }
+      }
+    }
+  },
+  {
+    "envelope": {
+      "source": "+491234567890",
+      "sourceName": "Me",
+      "syncMessage": {
+        "sentMessage": {
+          "destination": "+49111111111",
+          "attachments": [
+            {"voiceNote": true, "contentType": "audio/mp4", "filename": "/tmp/voice-own.mp4"}
           ]
         }
       }

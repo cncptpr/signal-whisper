@@ -28,6 +28,9 @@ let
         config.systemd.services.signal-whisper.serviceConfig.Environment;
     in
     lib.removePrefix "SIGNAL_WHISPER_MODEL=" entry;
+  ownMessagesSetting = config:
+    lib.findFirst (value: lib.hasPrefix "SIGNAL_WHISPER_TRANSCRIBE_OWN_MESSAGES=" value) ""
+      config.systemd.services.signal-whisper.serviceConfig.Environment;
 in
 assert modelPath (evaluate { modelName = "tiny.en"; }) ==
   "${modelPackages.tiny_en}/${modelPackages.tiny_en.name}.bin";
@@ -40,4 +43,6 @@ assert hasModelError (evaluate { modelName = "not-a-model"; })
   "`services.signal-whisper.modelName` must";
 assert hasModelError (evaluate { modelName = "signal-whisper-tiny_en"; })
   "`services.signal-whisper.modelName` must";
+assert ownMessagesSetting (evaluate { modelName = "tiny.en"; }) == "SIGNAL_WHISPER_TRANSCRIBE_OWN_MESSAGES=0";
+assert ownMessagesSetting (evaluate { modelName = "tiny.en"; transcribeOwnMessages = true; }) == "SIGNAL_WHISPER_TRANSCRIBE_OWN_MESSAGES=1";
 pkgs.runCommand "signal-whisper-model-options" { } "touch $out"
